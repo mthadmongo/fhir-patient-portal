@@ -45,6 +45,12 @@ python scripts/gen_synthea.py --count 100
 Bundles land in `data/synthea/output/fhir/` (git-ignored). Then load them 10 at a time via
 `POST /api/ingest/load-batch` (see below).
 
+## Create search indexes (once)
+
+```bash
+python scripts/create_indexes.py   # Atlas Search (patients_text) + Vector Search (patients_vector)
+```
+
 ## Run the backend
 
 ```bash
@@ -85,7 +91,7 @@ Implemented incrementally (see `docs/SPEC.md` §12):
 - [x] **Phase 2** — App-side FHIR denormalization into `patients`
 - [x] **Phase 3** — voyage-4 embeddings on `patients`
 - [x] **Phase 4** — Atlas Stream Processor: real-time FHIR→`patients` denormalization
-- [ ] Phase 5 — Search indexes + hybrid retrieval
+- [x] **Phase 5** — Atlas Search + Vector Search indexes + hybrid (`$rankFusion`) retrieval
 - [ ] Phase 6 — RAG chat
 - [ ] Phase 7 — Multi-tenancy + specialized APIs
 - [ ] Phase 8 — React frontend

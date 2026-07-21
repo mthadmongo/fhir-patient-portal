@@ -14,7 +14,9 @@ from typing import Any
 
 from bson import BSON
 
+from ..config import get_settings
 from ..db.mongo import DLQ_FHIR, FHIR_RAW, INGEST_STATE, PATIENTS, collection
+from ..fhir.denormalizer import denormalize
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_FHIR_DIR = REPO_ROOT / "data" / "synthea" / "output" / "fhir"
@@ -82,6 +84,15 @@ def _build_raw_doc(bundle: dict, patient_id: str, batch_number: int, source_file
     return doc
 
 
+def _denormalize_and_store(raw_doc: dict) -> None:
+    """Denormalize one raw bundle into `patients`, preserving any existing embedding."""
+    den = denormalize(raw_doc)
+    existing = collection(PATIENTS).find_one({"_id": den["_id"]}, {"embedding": 1})
+    if existing and "embedding" in existing:
+        den["embedding"] = existing["embedding"]
+    collection(PATIENTS).replace_one({"_id": den["_id"]}, den, upsert=True)
+
+
 def load_batch(size: int = 10) -> dict[str, Any]:
     """Load the next `size` unloaded patient bundles into `fhir_raw`."""
     files = available_files()
@@ -118,6 +129,8 @@ def load_batch(size: int = 10) -> dict[str, Any]:
                 raise ValueError("No Patient resource found in bundle")
             doc = _build_raw_doc(bundle, patient_id, batch_number, name)
             raw.replace_one({"_id": patient_id}, doc, upsert=True)
+            if get_settings().app_side_denormalize:
+                _denormalize_and_store(doc)
             loaded_ids.append(patient_id)
         except Exception as exc:  # noqa: BLE001 - record and continue
             dlq.insert_one({

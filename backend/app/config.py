@@ -32,6 +32,10 @@ class Settings(BaseModel):
     voyage_url: str = "https://ai.mongodb.com/v1/embeddings"
     embedding_dim: int = 1024
 
+    # When True, Load-Batch also denormalizes into `patients` app-side. Phase 4
+    # sets this False so the Atlas Stream Processor becomes the primary transform.
+    app_side_denormalize: bool = True
+
     # Mongo pool: local single-instance demo, light/bursty concurrency.
     # maxPoolSize 50 covers the small burst from a Load-Batch call; minPoolSize 5
     # keeps a few warm connections without holding idle capacity on the cluster.
@@ -53,4 +57,5 @@ def get_settings() -> Settings:
         ),
         voyage_model=os.getenv("VOYAGE_MODEL", "voyage-4"),
         voyage_url=os.getenv("VOYAGE_URL", "https://ai.mongodb.com/v1/embeddings"),
+        app_side_denormalize=os.getenv("APP_SIDE_DENORMALIZE", "true").lower() != "false",
     )

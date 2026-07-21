@@ -92,7 +92,7 @@ Implemented incrementally (see `docs/SPEC.md` §12):
 - [x] **Phase 3** — voyage-4 embeddings on `patients`
 - [x] **Phase 4** — Atlas Stream Processor: real-time FHIR→`patients` denormalization
 - [x] **Phase 5** — Atlas Search + Vector Search indexes + hybrid (`$rankFusion`) retrieval
-- [ ] Phase 6 — RAG chat
+- [x] **Phase 6** — RAG chat (gpt-5.5 via Grove) with citations
 - [ ] Phase 7 — Multi-tenancy + specialized APIs
 - [ ] Phase 8 — React frontend
 - [ ] Phase 9 — Polish

@@ -10,13 +10,11 @@ Notes on synthetic data:
 """
 from __future__ import annotations
 
-import hashlib
 import re
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from typing import Any
 
 _DIGITS = re.compile(r"\d+$")
-DEFAULT_DAYS_SUPPLY = 30
 
 # Synthea encodes social determinants of health as SNOMED "conditions"
 # (employment, education, etc.). We keep them in the data but tag them "social"
@@ -151,7 +149,7 @@ def _conditions(items: list[dict]) -> list[dict]:
     return sorted(by_code.values(), key=lambda x: x.get("onsetDate") or "")
 
 
-def _medications(items: list[dict], patient_id: str, today: date) -> list[dict]:
+def _medications(items: list[dict]) -> list[dict]:
     by_code: dict[str, dict] = {}
     for m in items:
         concept = m.get("medicationCodeableConcept")
@@ -181,29 +179,7 @@ def _medications(items: list[dict], patient_id: str, today: date) -> list[dict]:
         elif status == "active":
             prev["status"] = "active"
 
-    meds = list(by_code.values())
-    for med in meds:
-        _add_refill_fields(med, patient_id, today)
-    return sorted(meds, key=lambda x: x.get("authoredOn") or "", reverse=True)
-
-
-def _add_refill_fields(med: dict, patient_id: str, today: date) -> None:
-    """Deterministically synthesize fill/refill info (Synthea omits dispenseRequest)."""
-    days_supply = DEFAULT_DAYS_SUPPLY
-    med["daysSupply"] = days_supply
-    if med.get("status") != "active":
-        med["refillsRemaining"] = 0
-        med["lastFillDate"] = None
-        med["nextRefillDue"] = None
-        return
-    h = int(hashlib.md5(f"{patient_id}:{med['rxnorm']}".encode()).hexdigest(), 16)
-    offset = h % (days_supply + 15)          # 0..44 days since last fill
-    refills = (h >> 8) % 6                    # 0..5 refills remaining
-    last_fill = today - timedelta(days=offset)
-    next_due = last_fill + timedelta(days=days_supply)
-    med["refillsRemaining"] = refills
-    med["lastFillDate"] = last_fill.isoformat()
-    med["nextRefillDue"] = next_due.isoformat()
+    return sorted(by_code.values(), key=lambda x: x.get("authoredOn") or "", reverse=True)
 
 
 def _one_observation(code: dict, value_obj: dict, obs: dict, category: str) -> dict | None:
@@ -364,9 +340,8 @@ def _summary_text(doc: dict) -> str:
 
 # --------------------------------- entrypoint -------------------------------
 
-def denormalize(raw: dict, *, today: date | None = None) -> dict:
+def denormalize(raw: dict) -> dict:
     """Convert a `fhir_raw` bundle document into a denormalized patient document."""
-    today = today or date.today()
     by = _resources_by_type(raw)
     patient = (by.get("Patient") or [{}])[0]
     patient_id = patient.get("id") or raw.get("_id")
@@ -377,7 +352,7 @@ def denormalize(raw: dict, *, today: date | None = None) -> dict:
         "source": "fhir_raw",
         **_patient_fields(patient),
         "conditions": _conditions(by.get("Condition", [])),
-        "medications": _medications(by.get("MedicationRequest", []), patient_id, today),
+        "medications": _medications(by.get("MedicationRequest", [])),
         "observations": _observations(by.get("Observation", [])),
         "allergies": _allergies(by.get("AllergyIntolerance", [])),
         "immunizations": _immunizations(by.get("Immunization", [])),

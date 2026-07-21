@@ -55,6 +55,27 @@ uvicorn backend.app.main:app --reload --port 8000
 - Health check: `GET http://127.0.0.1:8000/health`
 - OpenAPI docs: `http://127.0.0.1:8000/docs`
 
+## Atlas Stream Processor (real-time denormalization)
+
+The processor `fhirDenormalize` on SPI `fhir-asp` watches `fhir_raw` (change stream),
+denormalizes each FHIR bundle (same transform as `backend/app/fhir/denormalizer.py`,
+implemented as an aggregation in `streaming/pipeline.py`), and `$merge`s into `patients`.
+The app-side voyage-4 embed step then fills vectors.
+
+```bash
+export PATH="$HOME/.npm-global/bin:$PATH"        # mongosh
+python streaming/deploy_processor.py deploy      # drop + create + start (BILLING starts)
+python streaming/deploy_processor.py status      # stats / DLQ counts
+python streaming/deploy_processor.py stop        # stop (BILLING stops; state retained)
+```
+
+When the processor is running, start the API with `APP_SIDE_DENORMALIZE=false` so ASP is the
+sole transform; then `POST /api/ingest/load-batch` inserts raw FHIR and patients appear in
+`patients` within seconds. When the processor is stopped, leave `APP_SIDE_DENORMALIZE=true`
+(default) to denormalize in-process.
+
+> **Billing:** SP10 bills per-second while started. Stop it when idle.
+
 ## Build phases
 
 Implemented incrementally (see `docs/SPEC.md` §12):
@@ -63,7 +84,7 @@ Implemented incrementally (see `docs/SPEC.md` §12):
 - [x] **Phase 1** — Synthea data + Load-Batch ingest (`fhir_raw`)
 - [x] **Phase 2** — App-side FHIR denormalization into `patients`
 - [x] **Phase 3** — voyage-4 embeddings on `patients`
-- [ ] Phase 4 — Atlas Stream Processor (real-time)
+- [x] **Phase 4** — Atlas Stream Processor: real-time FHIR→`patients` denormalization
 - [ ] Phase 5 — Search indexes + hybrid retrieval
 - [ ] Phase 6 — RAG chat
 - [ ] Phase 7 — Multi-tenancy + specialized APIs

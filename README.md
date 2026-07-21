@@ -6,7 +6,24 @@ and get **different features/APIs** over the **same dataset** — demonstrating 
 own your FHIR data in MongoDB you can extend APIs freely (no managed FHIR-store lock-in), and
 build tenant-specific products on one platform.
 
-See [`docs/SPEC.md`](docs/SPEC.md) for the full technical spec and phased plan.
+See [`docs/SPEC.md`](docs/SPEC.md) for the full technical spec and [`docs/DEMO.md`](docs/DEMO.md)
+for the demo walkthrough.
+
+## Architecture
+
+```
+React UI ─► FastAPI (tenant middleware, shared + per-tenant routers)
+                │                         │
+     hybrid search + gpt-5.5        Load-Batch inserts raw FHIR
+                │                         ▼
+                ▼                    MongoDB: fhir_raw  ──Atlas Stream Processor──►  patients
+   Atlas Search + Vector Search ◄────────────────────────  (+ voyage-4 embedding)
+```
+
+- `fhir_raw` — raw FHIR R4 bundles (source of truth).
+- Atlas Stream Processor (`streaming/`) denormalizes → `patients` in real time.
+- App-side voyage-4 embeddings + Atlas Search/Vector Search indexes power hybrid retrieval.
+- gpt-5.5 (Grove) generates grounded, cited answers; tenants expose different APIs.
 
 ## Stack
 
@@ -107,6 +124,15 @@ npm run dev     # http://localhost:5173  (proxies /api to the backend on :8000)
 Open the app, click a tenant to sign in, use **Load 10 patients** to stream data in, then
 search patients, chat, and open a patient to see that tenant's specialized tools.
 
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest backend/tests -q
+```
+
+Unit tests cover the FHIR denormalizer and the tenant domain logic (pure functions; no DB/network).
+
 ## Build phases
 
 Implemented incrementally (see `docs/SPEC.md` §12):
@@ -120,4 +146,4 @@ Implemented incrementally (see `docs/SPEC.md` §12):
 - [x] **Phase 6** — RAG chat (gpt-5.5 via Grove) with citations
 - [x] **Phase 7** — Multi-tenancy: click-login, feature registry, shared + specialized APIs
 - [x] **Phase 8** — React frontend (login, chat, patient views, tenant tools)
-- [ ] Phase 9 — Polish
+- [x] **Phase 9** — Polish: tests, seed script, demo walkthrough

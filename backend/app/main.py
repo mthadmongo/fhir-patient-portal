@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import ingest
+from .api import aetna, cvs, ingest, patients, quest, tenants, walgreens
 from .config import get_settings
 from .db.mongo import get_client, get_db
 
@@ -36,6 +36,12 @@ def create_app() -> FastAPI:
         }
 
     app.include_router(ingest.router)
+    app.include_router(tenants.router)
+    app.include_router(patients.router)
+    app.include_router(walgreens.router)
+    app.include_router(cvs.router)
+    app.include_router(aetna.router)
+    app.include_router(quest.router)
 
     @app.get("/", tags=["system"])
     def root() -> dict:

@@ -61,6 +61,20 @@ uvicorn backend.app.main:app --reload --port 8000
 - Health check: `GET http://127.0.0.1:8000/health`
 - OpenAPI docs: `http://127.0.0.1:8000/docs`
 
+## Tenants & APIs
+
+Four tenants share the same dataset but expose different features (select via the `X-Tenant`
+header after a click-to-login). Shared APIs: `/api/patients*`, `/api/chat`, ingest. Specialized:
+
+| Tenant | Type | Specialized endpoints |
+|--------|------|-----------------------|
+| Walgreens | Pharmacy | `refill-insights`, `immunization-eligibility`, `drug-interactions` |
+| CVS Pharmacy | Pharmacy | `adherence`, `clinic-visits`, `drug-interactions` |
+| Aetna | Payer | `care-gaps`, `risk-score`, `coverage-check` |
+| Quest | Lab | `lab-trends`, `abnormal-flags`, `test-recommendations` |
+
+Cross-tenant calls to another tenant's specialized API return `403`.
+
 ## Atlas Stream Processor (real-time denormalization)
 
 The processor `fhirDenormalize` on SPI `fhir-asp` watches `fhir_raw` (change stream),
@@ -93,6 +107,6 @@ Implemented incrementally (see `docs/SPEC.md` §12):
 - [x] **Phase 4** — Atlas Stream Processor: real-time FHIR→`patients` denormalization
 - [x] **Phase 5** — Atlas Search + Vector Search indexes + hybrid (`$rankFusion`) retrieval
 - [x] **Phase 6** — RAG chat (gpt-5.5 via Grove) with citations
-- [ ] Phase 7 — Multi-tenancy + specialized APIs
+- [x] **Phase 7** — Multi-tenancy: click-login, feature registry, shared + specialized APIs
 - [ ] Phase 8 — React frontend
 - [ ] Phase 9 — Polish

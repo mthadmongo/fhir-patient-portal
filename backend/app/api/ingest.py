@@ -4,6 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from ..embed.worker import embed_pending
 from ..ingest import loader
 
 router = APIRouter(prefix="/api/ingest", tags=["ingest"])
@@ -20,6 +21,12 @@ def load_batch(req: LoadBatchRequest | None = None) -> dict:
         return loader.load_batch(size=size)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post("/embed-pending")
+def embed_pending_endpoint() -> dict:
+    """Embed any denormalized patients that don't yet have a vector."""
+    return embed_pending()
 
 
 @router.get("/status")

@@ -62,7 +62,7 @@ Implemented incrementally (see `docs/SPEC.md` §12):
 - [x] **Phase 0** — Scaffold, config, Mongo connection, `/health`
 - [x] **Phase 1** — Synthea data + Load-Batch ingest (`fhir_raw`)
 - [x] **Phase 2** — App-side FHIR denormalization into `patients`
-- [ ] Phase 3 — voyage-4 embeddings
+- [x] **Phase 3** — voyage-4 embeddings on `patients`
 - [ ] Phase 4 — Atlas Stream Processor (real-time)
 - [ ] Phase 5 — Search indexes + hybrid retrieval
 - [ ] Phase 6 — RAG chat

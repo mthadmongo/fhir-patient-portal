@@ -16,6 +16,7 @@ from bson import BSON
 
 from ..config import get_settings
 from ..db.mongo import DLQ_FHIR, FHIR_RAW, INGEST_STATE, PATIENTS, collection
+from ..embed.worker import embed_pending
 from ..fhir.denormalizer import denormalize
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -149,12 +150,18 @@ def load_batch(size: int = 10) -> dict[str, Any]:
     )
 
     total_loaded = len(loaded) + len(batch_files)
+    embed_result = None
+    if get_settings().app_side_denormalize:
+        # App-side path: embed the freshly denormalized patients now.
+        embed_result = embed_pending()
+
     return {
         "loadedPatientIds": loaded_ids,
         "batchNumber": batch_number,
         "batchSize": len(batch_files),
         "totalRawLoaded": total_loaded,
         "poolSize": len(files),
+        "embedding": embed_result,
         "note": "Stream Processor will denormalize these into `patients` momentarily.",
     }
 

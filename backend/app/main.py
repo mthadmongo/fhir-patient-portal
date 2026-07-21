@@ -4,6 +4,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .api import ingest
 from .config import get_settings
 from .db.mongo import get_client, get_db
 
@@ -33,6 +34,8 @@ def create_app() -> FastAPI:
             "db": db.name,
             "collections": db.list_collection_names(),
         }
+
+    app.include_router(ingest.router)
 
     @app.get("/", tags=["system"])
     def root() -> dict:

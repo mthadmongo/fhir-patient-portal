@@ -36,6 +36,15 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+## Generate patient data (source pool)
+
+```bash
+python scripts/gen_synthea.py --count 100
+```
+
+Bundles land in `data/synthea/output/fhir/` (git-ignored). Then load them 10 at a time via
+`POST /api/ingest/load-batch` (see below).
+
 ## Run the backend
 
 ```bash
@@ -51,7 +60,7 @@ uvicorn backend.app.main:app --reload --port 8000
 Implemented incrementally (see `docs/SPEC.md` §12):
 
 - [x] **Phase 0** — Scaffold, config, Mongo connection, `/health`
-- [ ] Phase 1 — Synthea data + Load-Batch ingest
+- [x] **Phase 1** — Synthea data + Load-Batch ingest (`fhir_raw`)
 - [ ] Phase 2 — App-side FHIR denormalization
 - [ ] Phase 3 — voyage-4 embeddings
 - [ ] Phase 4 — Atlas Stream Processor (real-time)

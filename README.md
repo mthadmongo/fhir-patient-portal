@@ -96,6 +96,17 @@ sole transform; then `POST /api/ingest/load-batch` inserts raw FHIR and patients
 
 > **Billing:** SP10 bills per-second while started. Stop it when idle.
 
+## Frontend (React + Vite)
+
+```bash
+cd frontend
+npm install
+npm run dev     # http://localhost:5173  (proxies /api to the backend on :8000)
+```
+
+Open the app, click a tenant to sign in, use **Load 10 patients** to stream data in, then
+search patients, chat, and open a patient to see that tenant's specialized tools.
+
 ## Build phases
 
 Implemented incrementally (see `docs/SPEC.md` §12):
@@ -108,5 +119,5 @@ Implemented incrementally (see `docs/SPEC.md` §12):
 - [x] **Phase 5** — Atlas Search + Vector Search indexes + hybrid (`$rankFusion`) retrieval
 - [x] **Phase 6** — RAG chat (gpt-5.5 via Grove) with citations
 - [x] **Phase 7** — Multi-tenancy: click-login, feature registry, shared + specialized APIs
-- [ ] Phase 8 — React frontend
+- [x] **Phase 8** — React frontend (login, chat, patient views, tenant tools)
 - [ ] Phase 9 — Polish

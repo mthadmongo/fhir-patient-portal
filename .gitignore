@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project data & tools (regenerate via scripts/gen_synthea.py)
+tools/synthea.jar
+data/synthea/output/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/

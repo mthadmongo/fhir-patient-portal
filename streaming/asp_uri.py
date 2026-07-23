@@ -11,7 +11,14 @@ output is meant to be captured into an env var, e.g.:
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from urllib.parse import quote_plus, urlsplit
+
+from dotenv import load_dotenv
+
+# Load repo-root .env so the streaming scripts pick up secrets the same way the
+# backend does (config.py). No-op if the file is absent (e.g. Cloud Agent).
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 # SPI host for instance `fhir-asp` (region virginia-usa). Override via ASP_HOST.
 DEFAULT_ASP_HOST = (

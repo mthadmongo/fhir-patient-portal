@@ -21,6 +21,8 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 from bson import json_util
 
